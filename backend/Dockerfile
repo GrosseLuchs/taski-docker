@@ -15,7 +15,7 @@ RUN pip install gunicorn==23.0.0
 COPY requirements.txt .
 
 # Выполнить в текущей директории команду терминала
-# для установки зависимостей.
+# для установки зависимостей
 RUN pip install -r requirements.txt --no-cache-dir
 
 # Скопировать всё необходимое содержимое 
