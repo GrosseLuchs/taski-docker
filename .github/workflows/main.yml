@@ -1,0 +1,83 @@
+name: Main Taski workflow
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY: docker.io
+  BACKEND_IMAGE: grosseluchs/taski_backend
+  FRONTEND_IMAGE: grosseluchs/taski_frontend
+  GATEWAY_IMAGE: grosseluchs/taski_gateway
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.12
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools
+        pip install flake8==6.0.0 flake8-isort==6.0.0
+    - name: Test with flake8
+      run: python -m flake8 backend/
+
+  build-and-push:
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    
+    - name: Build and push backend
+      uses: docker/build-push-action@v4
+      with:
+        context: ./backend
+        push: true
+        tags: ${{ env.BACKEND_IMAGE }}:latest
+    
+    - name: Build and push frontend
+      uses: docker/build-push-action@v4
+      with:
+        context: ./frontend
+        push: true
+        tags: ${{ env.FRONTEND_IMAGE }}:latest
+    
+    - name: Build and push gateway
+      uses: docker/build-push-action@v4
+      with:
+        context: ./gateway
+        push: true
+        tags: ${{ env.GATEWAY_IMAGE }}:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy to server
+      uses: appleboy/ssh-action@v0.1.5
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.SSH_KEY }}
+        script: |
+          cd /home/yc-user/taski
+          docker compose -f docker-compose.production.yml pull
+          docker compose -f docker-compose.production.yml down
+          docker compose -f docker-compose.production.yml up -d
+          docker exec taski-backend-1 python manage.py migrate
