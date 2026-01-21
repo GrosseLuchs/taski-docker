@@ -3,13 +3,15 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-DEBUG = True  # В продакшене должно быть False!
-
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', 'backend', '127.0.0.1']
-
+ALLOWED_HOSTS = [
+    'localhost',
+    'backend',
+    '127.0.0.1',
+    'lynxerich.hopto.org',
+    '.lynxerich.hopto.org',
+]
 
 # Application definition
 
@@ -76,16 +78,16 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": os.getenv("POSTGRES_DB", "django"),
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
-        "USER": os.getenv("POSTGRES_USER", "django"),
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
     },
     {
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD", ""),
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
-        "HOST": os.getenv("DB_HOST", ""),
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
 
@@ -119,6 +121,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:3000',
     'http://localhost:8000',
+    'https://lynxerich.hopto.org',
+    'http://lynxerich.hopto.org',
 ]
 
 CORS_ALLOW_METHODS = [
@@ -137,4 +141,8 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [],
+    'DEFAULT_PAGINATION_CLASS': None,
+    'PAGE_SIZE': None,
 }
+
+SECRET_KEY = 'django-insecure-!@#$%^&*()_+asdfghjklzxcvbnmqwertyuiop1234567890qwerty'
